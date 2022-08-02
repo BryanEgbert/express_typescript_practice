@@ -1,25 +1,21 @@
-import express, { response } from "express";
+import express from "express";
+import cookieParser from "cookie-parser";
+import { routes } from "./routes/index.js";
+import { User } from "./database/models/user.model.js";
 
-const dotenv = require("dotenv");
 const app = express();
 
+const port: number = 8000;
+
 app.use(express.json());
+app.use(cookieParser());
 
-app.get("/", (req: any, res: { send: (arg0: string) => void; }) => {
-	res.send("Hello World");
+app.use("/", routes);
+
+User.sync({alter: true});
+
+app.listen(port, ()=> {
+	console.log(`Application listening at http://localhost:${port}`);
 });
 
-dotenv.config();
-
-function generateToken(username: string) {
-
-}
-
-app.post("/api/createUser", (req, res) => {
-	console.log(req.body);
-	res.send(req.body.username);
-});
-
-app.listen(8000, ()=> {
-	console.log("Application listening at http://localhost:8000");
-});
+export const server = app;
