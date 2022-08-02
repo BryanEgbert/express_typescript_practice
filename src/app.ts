@@ -2,6 +2,8 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { routes } from "./routes/index.js";
 import { User } from "./database/models/user.model.js";
+import sequelizeConnection from "./database/config/config.js";
+import pg from "pg";
 
 const app = express();
 
@@ -12,7 +14,7 @@ app.use(cookieParser());
 
 app.use("/", routes);
 
-User.sync({alter: true});
+sequelizeConnection.sync({alter: true});
 
 app.listen(port, ()=> {
 	console.log(`Application listening at http://localhost:${port}`);
