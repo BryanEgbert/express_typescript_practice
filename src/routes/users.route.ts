@@ -4,6 +4,7 @@ import express, {Request, Response, Router} from "express";
 import { ITokenResponse, IUserRequest } from "../types/request.types.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { uuid } from "uuidv4";
 
 const userRouter: Router = express.Router();
 
@@ -15,13 +16,12 @@ userRouter.post("/new", (req: Request<{}, ITokenResponse, IUserRequest>, res: Re
 
 	if (passwordRegex.test(password)) {
 		let token = jwt.sign({
-			"username": req.body.username,
-			"email": req.body.email
+			"id": uuid()
 		}, 
 		process.env.TOKEN_SECRET as string, 
 		{ expiresIn: '3000s', audience: "http://localhost:8000", issuer: "http://localhost:8000" });
 
-		return res.status(201).json({"token": token}).cookie("Authorization", token, {maxAge: 900000, secure: true, sameSite: 'lax', domain: "http://localhost"});
+		return res.status(201).json({"token": token}).cookie("Authorization", token, {maxAge: 900000, secure: true, sameSite: 'lax', domain: "http://localhost", httpOnly: true});
 	} else {
 		return res.status(400).send({"error": "Weak Password"});
 	}

@@ -1,17 +1,17 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model, CreationOptional, InferCreationAttributes, InferAttributes } from 'sequelize';
 import { IUser } from "../../interfaces/user.interface.js"
-import sequelizeConnection from '../config/config.js'
+import sequelizeConnection from '../config/index.js'
 
-export class User extends Model implements IUser {
-  id!: any;
-  username!: string;
-  email!: string;
-  password!: string;
+export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+  declare id: CreationOptional<any>;
+  declare username: string;
+  declare email: string;
+  declare password: string;
 };
 
 User.init({
   id: {
-    type: DataTypes.UUIDV4,
+    type: DataTypes.UUID,
     primaryKey: true,
     allowNull: false,
     defaultValue: DataTypes.UUIDV4
@@ -30,5 +30,5 @@ User.init({
   }
 }, {
   sequelize: sequelizeConnection,
-  tableName:  "users"
+  modelName:  "users"
 });
