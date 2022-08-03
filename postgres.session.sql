@@ -1,1 +1,1 @@
-DROP DATABASE TSexpress_practice;
+SELECT "id", "username", "email", "password", "createdAt", "updatedAt" FROM "users" AS "users" WHERE "users"."email" = 'joe@test.com' LIMIT 1
