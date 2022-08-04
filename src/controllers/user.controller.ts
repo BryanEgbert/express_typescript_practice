@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import { comparePassword, hashPassword } from "../utils/passwordUtils.js";
 import { signToken } from "../utils/jwtUtils.js";
 
-const isDev: boolean = process.env.NODE_ENV === "development";
+const isProd: boolean = process.env.NODE_ENV === "production";
 
 class UserController {
 	public async createUser (req: Request, res: Response) {
@@ -15,7 +15,7 @@ class UserController {
 		const passwordRegex: RegExp = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,16}$/;
 		
 		if (passwordRegex.test(payload.password) === false) {
-			return res.status(400).json({error: "Weak password"});
+			return res.status(400).json({message: "Weak password"});
 		}
 
 		const userInDB = await User.findOne({
@@ -24,11 +24,9 @@ class UserController {
 				email: payload.email
 			}
 		});
-
-		console.log(`userinDB: ${userInDB}`);
 		
 		if (userInDB !== null)
-			return res.status(409).send({error: "User already exists"});
+			return res.status(409).send({message: "User already exists"});
 		
 		const newUUID = uuid();
 		let newToken = signToken(newUUID);
@@ -39,8 +37,8 @@ class UserController {
 		return res
 			.status(201)
 			.cookie("authorization", newToken,
-				{ maxAge: 900000, secure: isDev === false, sameSite: 'lax', domain: "http://localhost", httpOnly: true })
-			.json({});
+				{ maxAge: 900000, secure: isProd, sameSite: 'lax', domain: "http://localhost", httpOnly: true })
+			.end();
 	}
 
 	public async getUserByID(req: Request, res: Response) {
@@ -53,13 +51,15 @@ class UserController {
 			if (err) return res.sendStatus(403);
 			
 			const userInDB = await User.findByPk(user.id);
-			if (userInDB === null) return res.status(403).json({error: "invalid token"});		
+			if (userInDB === null) return res.status(403).json({message: "invalid token"});		
 
-			return res.status(200).json({username: userInDB.username as string, email: userInDB.email as string});
+			return res
+				.status(200)
+				.json({username: userInDB.username as string, email: userInDB.email as string, isSeller: userInDB.isSeller});
 		})
 	}
 
-	public async getUserByEmail(req: Request, res: Response) {
+	public async loginByEmail(req: Request, res: Response) {
 		const payload = req.body;
 
 		const userInDB = await User.findOne({
@@ -70,19 +70,21 @@ class UserController {
 
 		if (userInDB === null || userInDB === undefined)
 		{
-			return res.status(404).send({error: "email doesn't exists"});
+			return res.status(404).send({message: "email doesn't exists"});
 		}
 		
 		const passwordMatch: boolean = await comparePassword(payload.password, userInDB.password);
 
 		if (passwordMatch === false) 
-			return res.status(401).send({"Error": "Email and password doesn't match"});
+			return res.status(401).send({message: "Email and password doesn't match"});
 
 		const token = signToken(uuid());
 
-		return res.status(200).cookie("authorization", token,
-			{ maxAge: 900000, secure: isDev === false, sameSite: 'lax', domain: "http://localhost", httpOnly: true })
-			.json(null);
+		return res
+			.status(200)
+			.cookie("authorization", token,
+				{ maxAge: 900000, secure: isProd, sameSite: 'lax', domain: "http://localhost", httpOnly: true })
+			.end();
 	}
 }
 

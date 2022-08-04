@@ -6,3 +6,10 @@ export function signToken(id: string): string {
 	}, process.env.TOKEN_SECRET as Secret,
 	{ expiresIn: '3000s', audience: "http://localhost:8000", issuer: "http://localhost:8000" });
 }
+
+export function isTokenValid(token: string): boolean {
+	var isValid = jwt.verify(token, process.env.TOKEN_SECRET as string, {}, undefined);
+
+	return false;
+
+}

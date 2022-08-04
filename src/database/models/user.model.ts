@@ -2,18 +2,18 @@ import { DataTypes, Model, CreationOptional, InferCreationAttributes, InferAttri
 import { IUser } from "../../interfaces/user.interface.js"
 import sequelizeConnection from '../config/index.js'
 
-export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> implements IUser {
   declare id: CreationOptional<any>;
   declare username: string;
   declare email: string;
   declare password: string;
+  declare isSeller: CreationOptional<boolean>;
 };
 
 User.init({
   id: {
     type: DataTypes.UUID,
     primaryKey: true,
-    allowNull: false,
     defaultValue: DataTypes.UUIDV4
   },
   username: {
@@ -27,6 +27,10 @@ User.init({
   password: {
     type: DataTypes.TEXT,
     allowNull: false
+  },
+  isSeller: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 }, {
   sequelize: sequelizeConnection,

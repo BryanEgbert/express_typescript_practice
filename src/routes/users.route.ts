@@ -20,7 +20,7 @@ userRouter.post("/new", async (req: Request<{}, ITokenResponse, IUserRequest>, r
 });
 
 userRouter.get("/login", async (req: Request, res: Response) => {
-	await userController.getUserByEmail(req, res);
+	await userController.loginByEmail(req, res);
 })
 userRouter.get("/", async (req: Request, res: Response) => {
 	await userController.getUserByID(req, res);

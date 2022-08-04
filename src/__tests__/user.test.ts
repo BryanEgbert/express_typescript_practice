@@ -4,13 +4,17 @@ import { User } from "../database/models/user.model.js";
 import { signToken } from "../utils/jwtUtils.js";
 import { uuid } from "uuidv4";
 import { hashPassword } from "../utils/passwordUtils.js";
+import { mockUserTable } from "../utils/testUtils.js";
+import { Server } from "http";
 
 const requestWithSuperset = supertest(server);
 
 jest.useRealTimers();
 
 describe("User Endpoints", () => {
+	let app: Server;
 	beforeAll(async () => {
+		app = server.listen(8080);
 		await User.sync({force: true});
 	});
 
@@ -20,6 +24,10 @@ describe("User Endpoints", () => {
 		.send({username: "Joe", email: "joe@test.com", password: "Aajjdkdkd12!"});
 		
 		expect(res.statusCode).toEqual(201);
+		expect(await User.findOne({where: {
+			username: "Joe",
+			email: "joe@test.com"
+		}})).not.toBeNull();
 	});
 
 	it("[POST] expected: 400 status code because of weak password", async () => {
@@ -32,13 +40,7 @@ describe("User Endpoints", () => {
 	});
 
 	it("[GET] (by email) expected: 200 status code", async () => {
-		const hashedPassword = await hashPassword("Aajjdkdkd12!");
-		User.create({
-			id: uuid(),
-			username: "Joe",
-			password: hashedPassword,
-			email: "joe@test.com"
-		});
+		await mockUserTable(uuid());
 		const res = await requestWithSuperset.get("/api/users/login")
 			.send({ "email": "joe@test.com", "password": "Aajjdkdkd12!"});
 
@@ -48,12 +50,7 @@ describe("User Endpoints", () => {
 
 	it("[GET] (by id) expected: 200 status code with auth cookie", async () => {
 		const newUUID = uuid();
-		User.create({
-			id: newUUID,
-			username: "Joe",
-			password: "joe",
-			email: "joe@test.com"
-		});
+		await mockUserTable(newUUID);
 
 		var res = await requestWithSuperset
 			.get("/api/users/")
@@ -62,5 +59,9 @@ describe("User Endpoints", () => {
 		expect(res.statusCode).toEqual(200);
 		expect(res.body.username).toEqual("Joe");
 		expect(res.body.email).toEqual("joe@test.com");
+	});
+
+	afterAll(() => {
+		app.close();
 	})
 });

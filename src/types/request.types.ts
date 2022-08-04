@@ -1,3 +1,5 @@
+import {Request} from "express";
+
 export interface IUserRequest {
 	username: string;
 	email: string;
@@ -6,5 +8,4 @@ export interface IUserRequest {
 
 export interface ITokenResponse {
 	token: string;
-	expiredDate: Date;
 };
