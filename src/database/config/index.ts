@@ -14,6 +14,7 @@ const sequelizeConnection = new Sequelize(dbName, dbUser, dbPassword, {
 	host: dbHost,
 	port: 5432,
 	dialect: dbDriver,
+	logging: process.env.NODE_ENV !== "test"
 });
 
 export default sequelizeConnection;
