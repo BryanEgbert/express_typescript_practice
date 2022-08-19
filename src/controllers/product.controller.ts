@@ -1,28 +1,22 @@
-import { Request, Response, NextFunction } from "express";
-import { uuid } from "uuidv4";
-import { User } from "../database/models/user.model.js";
-import { IUser } from "../interfaces/user.interface.js";
-import jwt from "jsonwebtoken";
-import { comparePassword, hashPassword } from "../utils/passwordUtils.js";
-import { signToken } from "../utils/jwtUtils.js";
+import { Request, Response } from "express";
+import { Op } from "sequelize";
 import { Product } from "../database/models/product.model.js";
-
-const isProd: boolean = process.env.NODE_ENV === "production";
 
 class ProductController {
 	public async createProduct(req: any, res: Response) {
-		const uid = req.user.id;
+		const shopId = req.jwtPayload.shopId;
 
 		const payload = req.body;
 
 		await Product.create({
-			userId: uid,
+			shopId: shopId,
 			name: payload.name,
 			price: payload.price,
-			description: payload.description
+			description: payload.description,
+			stock: payload.stock
 		}).catch((err) => {
 			console.info(err);
-			return res.status(500).json({message: err});
+			return res.status(500).json({message: "An error has occured"});
 		});
 		
 		return res.sendStatus(201);
@@ -30,14 +24,15 @@ class ProductController {
 	}
 
 	public async getProductsByUserID(req: any, res: Response) {
-		const uid = req.user.id;
+		const shopId = req.jwtPayload.shopId;
+		console.info(shopId);
 		
 		const productsInDB: Product[] = await Product.findAll({
 			where: {
-				userId: uid
+				shopId: shopId
 			}
 		});
-
+		console.info('test');
 		return res.status(200).json({products: productsInDB});
 	}
 
@@ -53,29 +48,63 @@ class ProductController {
 
 		return res
 			.status(200)
-			.json({name: productInDB.name, description: productInDB.description, price: productInDB.price});
+			.json({
+				name: productInDB.name, 
+				description: productInDB.description, 
+				price: productInDB.price, 
+				stock: productInDB.stock
+			});
 	}
 
 	public async getAllProducts(req: Request, res: Response) {
 		const productsInDB: Product[] = await Product.findAll();
-		let data: { name: string; description: string; price: number; }[] = [];
+		let data: { name: string; description: string; price: number; stock: number; }[] = [];
 		productsInDB.forEach((product) => {
 			data.push({
 				name: product.name,
 				description: product.description,
-				price: product.price
+				price: product.price,
+				stock: product.stock
 			})
 		});
 
 		return res.status(200).json({products: data});
 	}
 
+	public async updateProduct(req: any, res: Response) {
+		const payload = req.body;
+		const productInDB: Product | null = await Product.findOne({
+			where: {
+				[Op.and]: [{
+					id: req.params.id
+				}, {
+					shopId: req.jwtPayload.shopId
+				}]
+			}
+		});
+
+		if (productInDB === null) 
+			return res.status(404).json({message: `product with id of ${req.params.id} doesn't exist`});
+
+		if (productInDB.shopId !== req.jwtPayload.shopId)
+			return res.status(401).json({message: "unauthorized"});
+
+		productInDB.update({
+			name: payload.name,
+			description: payload.description,
+			price: payload.price,
+			stock: payload.stock,
+		});
+
+		return res.sendStatus(200);
+	}
+
 	public async deleteProduct(req: any, res: Response) {
-		const uid = req.user.id;
+		const shopId = req.jwtPayload.shopId;
 		await Product.destroy({
 			where: {
 				id: parseInt(req.params.id),
-				userId: uid
+				shopId: shopId
 			}
 		}).catch((err) => {
 			return res.status(500).json({ message: err });

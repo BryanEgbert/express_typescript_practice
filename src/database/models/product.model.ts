@@ -1,13 +1,15 @@
-import { DataTypes, Model, CreationOptional, InferCreationAttributes, InferAttributes } from 'sequelize';
+import { DataTypes, Model, CreationOptional, InferCreationAttributes, InferAttributes, ForeignKey } from 'sequelize';
 import sequelizeConnection from '../config/index.js'
+import { Shop } from './shop.model.js';
 import { User } from './user.model.js';
 
 export class Product extends Model<InferAttributes<Product>, InferCreationAttributes<Product>> {
 	declare id: CreationOptional<number>;
-	declare userId: string;
+	declare shopId: ForeignKey<string>;
 	declare name: string;
 	declare price: number;
 	declare description: string;
+	declare stock: number;
 };
 
 Product.init({
@@ -16,10 +18,6 @@ Product.init({
 		primaryKey: true,
 		allowNull: false,
 		autoIncrement: true
-	},
-	userId: {
-		type: DataTypes.UUID,
-		allowNull: false
 	},
 	name: {
 		type: DataTypes.TEXT,
@@ -32,15 +30,28 @@ Product.init({
 	description: {
 		type: DataTypes.TEXT,
 		allowNull: false
-	}
+	},
+	stock: {
+		type: DataTypes.BIGINT,
+		allowNull: false,
+		defaultValue: 0,
+		set(value: number) {
+			if (value < 0)
+				this.setDataValue('stock', 0);
+			else
+				this.setDataValue('stock', value);
+		}
+	}	
 }, {
 	sequelize: sequelizeConnection,
-	modelName: "products"
+	modelName: "products",
 });
 
-User.hasMany(Product, {
-	foreignKey: {allowNull: false}
+
+Shop.hasMany(Product, {
+	foreignKey: {field: "productId", allowNull: true},
+	onDelete: "CASCADE",
+	onUpdate: "CASCADE"
 });
 
-Product.belongsTo(User);
-
+Product.belongsTo(Shop);

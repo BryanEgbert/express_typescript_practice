@@ -32,8 +32,9 @@ class UserController {
 		let newToken = signToken(newUUID);
 
 		let hashedPassword = await hashPassword(payload.password); 
-		await User.create({id: newUUID, username: payload.username, email: payload.email, password: hashedPassword});
-
+		await User.create({
+			id: newUUID, username: payload.username, email: payload.email, password: hashedPassword
+		});
 		return res
 			.status(201)
 			.cookie("authorization", newToken,

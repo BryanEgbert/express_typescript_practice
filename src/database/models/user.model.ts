@@ -1,5 +1,6 @@
 import { DataTypes, Model, CreationOptional, InferCreationAttributes, InferAttributes } from 'sequelize';
 import { IUser } from "../../interfaces/user.interface.js"
+import { hashPassword } from '../../utils/passwordUtils.js';
 import sequelizeConnection from '../config/index.js'
 
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> implements IUser {

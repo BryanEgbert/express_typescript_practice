@@ -6,8 +6,7 @@ import { uuid } from "uuidv4";
 import { hashPassword } from "../utils/passwordUtils.js";
 import { mockUserTable } from "../utils/testUtils.js";
 import { Server } from "http";
-
-const requestWithSuperset = supertest(server);
+import { Shop } from "../database/models/shop.model.js";
 
 jest.useRealTimers();
 
@@ -16,14 +15,15 @@ describe("User Endpoints", () => {
 	beforeAll(async () => {
 		app = server.listen(8080);
 		await User.sync({force: true});
+		await Shop.sync({force: true});
 	});
 
 	it("[POST] expected: 201 status code", async () => {
-		const res = await requestWithSuperset.post("/api/users/new")
+		const res = await supertest(server).post("/api/users/new")
 		.set("Accept", "*/*")
-		.send({username: "Joe", email: "joe@test.com", password: "Aajjdkdkd12!"});
+		.send({username: "Joe", email: "joe@test.com", password: "Aajjdkdkd12!"})
+		.expect(201);
 		
-		expect(res.statusCode).toEqual(201);
 		expect(await User.findOne({where: {
 			username: "Joe",
 			email: "joe@test.com"
@@ -31,7 +31,7 @@ describe("User Endpoints", () => {
 	});
 
 	it("[POST] expected: 400 status code because of weak password", async () => {
-		const res = await requestWithSuperset.post("/api/users/new")
+		const res = await supertest(server).post("/api/users/new")
 			.set("Accept", "*/*")
 			.send({username: "Joe", email: "joe@test.com", password: "Joe"});
 
@@ -40,8 +40,8 @@ describe("User Endpoints", () => {
 	});
 
 	it("[GET] (by email) expected: 200 status code", async () => {
-		await mockUserTable(uuid());
-		const res = await requestWithSuperset.get("/api/users/login")
+		await mockUserTable(uuid(), uuid());
+		const res = await supertest(server).get("/api/users/login")
 			.send({ "email": "joe@test.com", "password": "Aajjdkdkd12!"});
 
 		expect(res.statusCode).toEqual(200);
@@ -50,11 +50,11 @@ describe("User Endpoints", () => {
 
 	it("[GET] (by id) expected: 200 status code with auth cookie", async () => {
 		const newUUID = uuid();
-		await mockUserTable(newUUID);
+		await mockUserTable(newUUID, uuid());
 
-		var res = await requestWithSuperset
+		var res = await supertest(server)
 			.get("/api/users/")
-			.set("Cookie", `authorization=${signToken(newUUID)}`)
+			.set("Cookie", `authorization=${await signToken(newUUID)}`)
 			.send(undefined);
 		expect(res.statusCode).toEqual(200);
 		expect(res.body.username).toEqual("Joe");

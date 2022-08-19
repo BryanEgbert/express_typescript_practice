@@ -5,6 +5,8 @@ import { routes } from "./routes/index.js";
 import sequelizeConnection from "./database/config/index.js";
 import {User} from "./database/models/user.model.js";
 import { Product } from "./database/models/product.model.js";
+import { Cart } from "./database/models/cart.model.js";
+import { Shop } from "./database/models/shop.model.js";
 
 const app = express();
 const port: number = 8000;
@@ -21,15 +23,21 @@ app.use("/", routes);
 if (process.env.NODE_ENV !== "test")
 {
 	User.sync({force: true}).then(result => {
-		console.log(result);
+		console.info(result);
 		Product.sync({force: true}).then(result => {
-			console.log(result);
+			console.debug(result);
 		});
+		Cart.sync({force: true}).catch(err => {
+			console.debug(err);
+		});
+		Shop.sync({force: true}).catch(err => {
+			console.debug(err);
+		})
 	}).catch(err => {
-		console.log(err);
+		console.debug(err);
 	});
 	app.listen(port, () => {
-		console.log(`Application listening at http://localhost:${port}`);
+		console.debug(`Application listening at http://localhost:${port}`);
 	});
 }
 
