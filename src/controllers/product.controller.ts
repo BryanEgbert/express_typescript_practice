@@ -25,14 +25,13 @@ class ProductController {
 
 	public async getProductsByUserID(req: any, res: Response) {
 		const shopId = req.jwtPayload.shopId;
-		console.info(shopId);
 		
 		const productsInDB: Product[] = await Product.findAll({
 			where: {
 				shopId: shopId
 			}
 		});
-		console.info('test');
+		
 		return res.status(200).json({products: productsInDB});
 	}
 
