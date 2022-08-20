@@ -46,7 +46,7 @@ describe("Cart endpoint", () => {
 			expect(await Cart.findAll()).toHaveLength(productNames.length);
 			const res = await supertest(server).get("/api/carts/")
 				.set("Accept", "*/*")
-				.set("Cookie", `authorization=${await token2}`)
+				.set("Cookie", `authorization=${(await token2).token}`)
 				.send(undefined)
 				.expect(200);
 			
@@ -60,7 +60,7 @@ describe("Cart endpoint", () => {
 		let product = await Product.findOne({where: {name: "Grape"}});
 		const res = await supertest(server).post("/api/carts/")
 			.set("Accept", "*/*")
-			.set("Cookie", `authorization=${await token2}`)
+			.set("Cookie", `authorization=${(await token2).token}`)
 			.send({userId: userUUID2, productId: product?.id, address: "jelambar", amount: 1})
 			.expect(201);
 
@@ -81,7 +81,7 @@ describe("Cart endpoint", () => {
 
 		const res = await supertest(server).put(`/api/carts/${cart?.id}`)
 			.set("Accept", "*/*")
-			.set("Cookie", `authorization=${await token2}`)
+			.set("Cookie", `authorization=${(await token2).token}`)
 			.send({address: "Tangerang", amount: 5})
 			.expect(200);
 
@@ -96,7 +96,7 @@ describe("Cart endpoint", () => {
 
 		const res = await supertest(server).delete(`/api/carts/${cart?.productId}`)
 			.set("Accept", "*/*")
-			.set("Cookie", `authorization=${await token2}`)
+			.set("Cookie", `authorization=${(await token2).token}`)
 			.send(undefined)
 			.expect(200);
 

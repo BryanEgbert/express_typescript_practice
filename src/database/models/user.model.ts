@@ -4,7 +4,7 @@ import { hashPassword } from '../../utils/passwordUtils.js';
 import sequelizeConnection from '../config/index.js'
 
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> implements IUser {
-  declare id: CreationOptional<any>;
+  declare id: CreationOptional<string>;
   declare username: string;
   declare email: string;
   declare password: string;

@@ -29,35 +29,28 @@ class UserController {
 			return res.status(409).send({message: "User already exists"});
 		
 		const newUUID = uuid();
-		let newToken = signToken(newUUID);
 
 		let hashedPassword = await hashPassword(payload.password); 
 		await User.create({
 			id: newUUID, username: payload.username, email: payload.email, password: hashedPassword
 		});
+		
+		let newToken = await signToken(newUUID);
+
 		return res
 			.status(201)
-			.cookie("authorization", newToken,
+			.cookie("authorization", newToken.token,
 				{ maxAge: 900000, secure: isProd, sameSite: 'lax', domain: "http://localhost", httpOnly: true })
-			.end();
+			.json(newToken).end();
 	}
 
-	public async getUserByID(req: Request, res: Response) {
-		const tokenSecret: string = process.env.TOKEN_SECRET as string;
-		const token: string = req.cookies.authorization;
-
-		if (token === null) return res.sendStatus(401);
-
-		jwt.verify(token, tokenSecret, async (err: any, user: any) => {
-			if (err) return res.sendStatus(403);
-			
-			const userInDB = await User.findByPk(user.id);
-			if (userInDB === null) return res.status(403).json({message: "invalid token"});		
-
-			return res
-				.status(200)
-				.json({username: userInDB.username as string, email: userInDB.email as string, isSeller: userInDB.isSeller});
-		})
+	public async getUserByID(req: any, res: Response) {
+		const userInDB = await User.findByPk(req.jwtPayload.id);
+		if (userInDB === null) return res.status(403).json({message: "invalid token"});		
+		
+		return res
+			.status(200)
+			.json(userInDB).end();
 	}
 
 	public async loginByEmail(req: Request, res: Response) {

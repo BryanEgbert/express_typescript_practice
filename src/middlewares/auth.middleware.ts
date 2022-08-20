@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { ITokenResponse, IUserRequest } from "../types/request.types.js";
 import { User } from "../database/models/user.model.js";
 import { signToken } from "../utils/jwtUtils.js";
+import { RefreshToken } from "../database/models/refreshToken.model.js";
 
 dotenv.config();
 
@@ -18,17 +19,20 @@ export function jwtAuthorization(req: any, res: Response, next: NextFunction) {
 			algorithms: ["HS256"], 
 			ignoreExpiration: false, 
 			ignoreNotBefore: false
-		}, (err: any, jwtPayload: any) => {
-		// if (err.name === "TokenExpiredError") {
-		// 	return res.status(401).json({ message: "Token expired" });
-		// } else {
-		// 	return res.status(401).json({message: "Invalid token"});
-		// }
-		if (err)
-			return res.status(401).json({ message: "Invalid token" });
-		req.jwtPayload = jwtPayload;
-		next();
-	});
+		}, async (err: any, jwtPayload: any) => {
+			if (err !== null)
+			{
+				if (err === "TokenExpiredError") {
+					return res.status(401).json({message: "Token has expired"})
+				} else if (err !== "TokenExpiredError") {
+					return res.status(401).json({message: "Invalid token"});
+				}
+			}
+			
+			req.jwtPayload = jwtPayload;
+			next();
+		}
+	);
 }
 
 /**

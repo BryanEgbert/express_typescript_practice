@@ -14,7 +14,7 @@ jest.useRealTimers();
 describe("Product Endpoints", () => {
 	let userUUID: string = uuid();
 	let userUUID2: string = uuid();
-	let token: Promise<string>;
+	let token: Promise<{token: string, refreshToken: string}>;
 	let shopId: string = uuid();
 
 	let app: Server;
@@ -38,7 +38,7 @@ describe("Product Endpoints", () => {
 
 		const res = await supertest(server).get("/api/products/")
 			.set("Accept", "*/*")
-			.set("Cookie", `authorization=${await token}`)
+			.set("Cookie", `authorization=${(await token).token}`)
 			.send(undefined)
 			.expect(200);
 
@@ -50,7 +50,7 @@ describe("Product Endpoints", () => {
 
 		const res = await supertest(server).get("/api/products/4")
 			.set("Accept", "*/*")
-			.set("Cookie", `authorization=${await token}`)
+			.set("Cookie", `authorization=${(await token).token}`)
 			.send(undefined)
 			.expect(200);
 
@@ -75,7 +75,7 @@ describe("Product Endpoints", () => {
 		
 		const res = await supertest(server).post("/api/products/")
 			.set("Accept", "*/*")
-			.set("Cookie", `authorization=${await token}`)
+			.set("Cookie", `authorization=${(await token).token}`)
 			.send({name: "Apple", description: "Best apple in the world", price: 100000, stock: 6})
 			.expect(201);
 
@@ -94,7 +94,7 @@ describe("Product Endpoints", () => {
 
 		const res = await supertest(server).put("/api/products/6")
 			.set("Accept", "*/*")
-			.set("Cookie", `authorization=${await token}`)
+			.set("Cookie", `authorization=${(await token).token}`)
 			.send({name: "Melon", description: "Melon is the best fruit", price: 50000, stock: 300})
 			.expect(200);
 
@@ -107,7 +107,7 @@ describe("Product Endpoints", () => {
 		expect(await Product.findAll()).toHaveLength(productNames.length + 1);
 
 		const res = await supertest(server).delete("/api/products/5")
-			.set("Cookie", `authorization=${await token}`)
+			.set("Cookie", `authorization=${(await token).token}`)
 			.send(undefined)
 			.expect(200);
 	});
